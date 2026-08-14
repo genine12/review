@@ -7,12 +7,16 @@
   const arrowNext = document.getElementById("arrow-next");
 
   const modalOverlay = document.getElementById("modal-overlay");
+  const modalPanel = document.getElementById("modal-panel");
   const modalClose = document.getElementById("modal-close");
   const modalImg = document.getElementById("modal-img");
   const modalTitle = document.getElementById("modal-title");
   const modalCategory = document.getElementById("modal-category");
   const modalMeta = document.getElementById("modal-meta");
+  const modalDescription = document.getElementById("modal-description");
+  const modalRating = document.getElementById("modal-rating");
   const modalReviews = document.getElementById("modal-reviews");
+  const modalSimilarList = document.getElementById("modal-similar-list");
 
   let activeCategory = "전체";
   let searchTerm = "";
@@ -90,12 +94,29 @@
     cardTrack.scrollBy({ left: 300, behavior: "smooth" });
   });
 
+  function getAverageRating(restaurant) {
+    const sum = restaurant.reviews.reduce((acc, rv) => acc + rv.rating, 0);
+    return sum / restaurant.reviews.length;
+  }
+
+  function getSimilarRestaurants(restaurant) {
+    const sameCategory = RESTAURANTS.filter(
+      (r) => r.id !== restaurant.id && r.category === restaurant.category
+    );
+    const others = RESTAURANTS.filter(
+      (r) => r.id !== restaurant.id && r.category !== restaurant.category
+    );
+    return [...sameCategory, ...others].slice(0, 3);
+  }
+
   function openModal(restaurant) {
     modalImg.src = restaurant.img;
     modalImg.alt = restaurant.name;
     modalTitle.textContent = restaurant.name;
     modalCategory.textContent = restaurant.category;
     modalMeta.textContent = `${restaurant.area} · ${restaurant.tag}`;
+    modalDescription.textContent = restaurant.description;
+    modalRating.innerHTML = `<span class="review-rating">★</span> ${getAverageRating(restaurant).toFixed(1)} · 리뷰 ${restaurant.reviews.length}개`;
     modalReviews.innerHTML = restaurant.reviews
       .map(
         (rv) => `
@@ -106,7 +127,27 @@
       `
       )
       .join("");
+
+    modalSimilarList.innerHTML = getSimilarRestaurants(restaurant)
+      .map(
+        (r) => `
+        <button class="similar-card" type="button" data-id="${r.id}">
+          <img src="${r.img}" alt="${r.name}">
+          <p class="similar-name">${r.name}</p>
+          <p class="similar-meta">${r.area} · ${r.category}</p>
+        </button>
+      `
+      )
+      .join("");
+    modalSimilarList.querySelectorAll(".similar-card").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const target = RESTAURANTS.find((r) => r.id === Number(btn.dataset.id));
+        if (target) openModal(target);
+      });
+    });
+
     modalOverlay.hidden = false;
+    modalPanel.scrollTop = 0;
     document.body.style.overflow = "hidden";
   }
 

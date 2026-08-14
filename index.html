@@ -120,7 +120,7 @@
 </footer>
 
 <div class="modal-overlay" id="modal-overlay" hidden>
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal" id="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <button class="modal-close" id="modal-close" aria-label="닫기">×</button>
     <div class="modal-media">
       <img id="modal-img" src="" alt="">
@@ -129,7 +129,13 @@
       <p class="eyebrow" id="modal-category"></p>
       <h3 id="modal-title"></h3>
       <p class="modal-meta" id="modal-meta"></p>
+      <p class="modal-description" id="modal-description"></p>
+      <p class="modal-rating" id="modal-rating"></p>
       <ul class="modal-reviews" id="modal-reviews"></ul>
+      <div class="modal-similar">
+        <p class="eyebrow">비슷한 맛집 추천</p>
+        <div class="similar-list" id="modal-similar-list"></div>
+      </div>
     </div>
   </div>
 </div>
