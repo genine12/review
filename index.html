@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>믿먹 — 믿고 먹는 맛집</title>
+<meta name="description" content="광고·가짜 리뷰 없이, 믿을 수 있는 맛집을 발견하세요.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css" />
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a href="#top" class="logo">믿먹</a>
+    <nav class="site-nav">
+      <a href="#demo">데모</a>
+      <a href="#roadmap">로드맵</a>
+      <a href="#cta">소식받기</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+  <section class="hero">
+    <div class="container hero-inner">
+      <div class="hero-copy">
+        <p class="eyebrow">맛집 리뷰 서비스</p>
+        <h1>
+          광고 없이,<br>
+          <span class="highlight">믿을 수 있는</span> 맛집만.
+        </h1>
+        <p class="hero-sub">
+          여행과 외출을 계획할 때, 가짜 리뷰에 속지 않고<br>
+          진짜 후기로 맛집을 미리 찜해두세요.
+        </p>
+        <a href="#demo" class="hero-scroll">데모 체험하기 ↓</a>
+      </div>
+      <div class="hero-media">
+        <img src="assets/images/hero.jpg" alt="정갈하게 차려진 음식 테이블">
+      </div>
+    </div>
+  </section>
+
+  <section id="demo" class="demo">
+    <div class="container">
+      <div class="demo-intro">
+        <p class="eyebrow">Live Demo</p>
+        <h2>맛집을 직접 탐색해보세요</h2>
+        <p class="section-desc">지역, 음식 종류로 검색하고 필터링해보는 미니 체험판입니다.</p>
+      </div>
+
+      <div class="demo-controls">
+        <input type="search" id="demo-search" class="search-input" placeholder="맛집 이름, 지역, 태그로 검색">
+        <div class="filter-chips" id="filter-chips" role="group" aria-label="카테고리 필터"></div>
+      </div>
+
+      <div class="card-track-wrapper">
+        <button class="track-arrow track-arrow-prev" id="arrow-prev" aria-label="이전 카드">‹</button>
+        <div class="card-track" id="card-track"></div>
+        <button class="track-arrow track-arrow-next" id="arrow-next" aria-label="다음 카드">›</button>
+      </div>
+      <p class="empty-state" id="empty-state" hidden>검색 결과가 없어요. 다른 키워드로 찾아보세요.</p>
+    </div>
+  </section>
+
+  <section id="roadmap" class="roadmap">
+    <div class="container">
+      <p class="eyebrow">Roadmap</p>
+      <h2>앞으로 만들어갈 기능</h2>
+      <ol class="roadmap-list">
+        <li class="roadmap-item">
+          <span class="roadmap-index">01</span>
+          <h3>신뢰 리뷰 · 평점 시스템</h3>
+          <p>본인인증, 방문 인증 등을 통한 신뢰도 높은 리뷰</p>
+        </li>
+        <li class="roadmap-item">
+          <span class="roadmap-index">02</span>
+          <h3>개인 취향 기반 맞춤 추천</h3>
+          <p>취향 데이터 기반 맛집 추천</p>
+        </li>
+        <li class="roadmap-item">
+          <span class="roadmap-index">03</span>
+          <h3>여행 · 외출 코스 찾기</h3>
+          <p>여러 맛집을 묶어 동선을 짜는 기능</p>
+        </li>
+        <li class="roadmap-item">
+          <span class="roadmap-index">04</span>
+          <h3>찜 · 리스트 저장 및 공유</h3>
+          <p>관심 맛집 저장과 리스트 공유</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="cta" class="cta">
+    <div class="container cta-inner">
+      <h2>가장 먼저 소식을 받아보세요</h2>
+      <p>정식 출시 전, SNS와 카카오채널로 맛집 이야기를 먼저 만나보세요.</p>
+      <div class="cta-buttons">
+        <!-- TODO: 실제 카카오채널 URL로 교체 -->
+        <a href="#" class="btn btn-primary">카카오채널 추가</a>
+        <!-- TODO: 실제 인스타그램 URL로 교체 -->
+        <a href="#" class="btn btn-secondary">인스타그램 팔로우</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <span class="logo logo-small">믿먹</span>
+    <p>&copy; 2026 믿먹. 믿고 먹는 맛집.</p>
+  </div>
+</footer>
+
+<div class="modal-overlay" id="modal-overlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <button class="modal-close" id="modal-close" aria-label="닫기">×</button>
+    <div class="modal-media">
+      <img id="modal-img" src="" alt="">
+    </div>
+    <div class="modal-body">
+      <p class="eyebrow" id="modal-category"></p>
+      <h3 id="modal-title"></h3>
+      <p class="modal-meta" id="modal-meta"></p>
+      <ul class="modal-reviews" id="modal-reviews"></ul>
+    </div>
+  </div>
+</div>
+
+<script src="js/demo-data.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
