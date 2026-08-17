@@ -128,3 +128,19 @@ const RESTAURANTS = [
 ];
 
 const CATEGORIES = ["전체", "한식", "카페", "일식", "양식", "베이커리"];
+
+// 히어로 섹션에서 엔딩크레딧처럼 흐르는 후기 목업
+const HERO_REVIEWS = [
+  { name: "지은", handle: "@j_eats", text: "광고 하나 없이 이런 리스트가 나온다는 게 신기해요. 저장해둔 곳 다섯 군데 갔는데 다 성공.", place: "온기식당", rating: 5 },
+  { name: "민서", handle: "@minseo.k", text: "여행 가기 전에 미리 찜해두고 갔더니 헤매지 않았어요.", place: "브릭버거", rating: 5 },
+  { name: "태윤", handle: "@taeyun_dev", text: "협찬 티 나는 후기가 없어서 좋아요. 진짜 다녀온 사람 말투가 느껴짐.", place: "조용한 서재", rating: 4 },
+  { name: "하늘", handle: "@haneul_walk", text: "동네 주민만 아는 집이 이렇게 많았다니.", place: "산책식당", rating: 5 },
+  { name: "은지", handle: "@eunji_table", text: "별점보다 문장이 더 믿음이 가요. 좋았던 점, 아쉬웠던 점이 같이 적혀 있어서 판단하기 편했습니다.", place: "스시 나루", rating: 5 },
+  { name: "준호", handle: "@junho_eat", text: "혼밥 가능한 곳만 골라 보는 기능 계속 쓰게 되네요.", place: "달콤제과", rating: 4 },
+  { name: "서연", handle: "@seoyeon__", text: "주말 브런치 찾다가 발견했는데, 사진이랑 실제가 똑같아서 놀랐어요.", place: "브런치룸", rating: 5 },
+  { name: "도윤", handle: "@doyoon.p", text: "리뷰 하나하나가 짧지만 알맹이가 있어요.", place: "나폴리 피자집", rating: 5 },
+  { name: "예린", handle: "@yerin_food", text: "가짜 리뷰에 데인 적이 많아서 반신반의했는데, 여기 추천은 아직 실패가 없어요.", place: "스트리트버거", rating: 5 },
+  { name: "현우", handle: "@hyunwoo_", text: "부모님 모시고 갈 곳 찾을 때 제일 먼저 켭니다.", place: "온기식당", rating: 5 },
+  { name: "소미", handle: "@somi.log", text: "저장한 맛집을 지도로 묶어서 코스로 짜는 날이 빨리 왔으면.", place: "조용한 서재", rating: 4 },
+  { name: "재현", handle: "@jaehyun_kim", text: "친구들한테 링크 공유했더니 다들 어디서 찾았냐고 물어봐요.", place: "브릭버거", rating: 5 },
+];

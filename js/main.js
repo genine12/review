@@ -1,4 +1,5 @@
 (function () {
+  const heroMarquee = document.getElementById("hero-marquee");
   const cardTrack = document.getElementById("card-track");
   const filterChips = document.getElementById("filter-chips");
   const searchInput = document.getElementById("demo-search");
@@ -20,6 +21,48 @@
 
   let activeCategory = "전체";
   let searchTerm = "";
+
+  /* ---------- 히어로: 엔딩크레딧처럼 올라가는 후기 ---------- */
+
+  const MARQUEE_COLUMNS = 3;
+
+  function reviewCardHTML(rv) {
+    return `
+      <article class="mq-card">
+        <div class="mq-head">
+          <span class="mq-avatar">${rv.name.charAt(0)}</span>
+          <span class="mq-who">
+            <span class="mq-name">${rv.name}</span>
+            <span class="mq-handle">${rv.handle}</span>
+          </span>
+        </div>
+        <p class="mq-text">${rv.text}</p>
+        <p class="mq-place"><span class="mq-star">${"★".repeat(rv.rating)}</span> ${rv.place}</p>
+      </article>
+    `;
+  }
+
+  function renderHeroMarquee() {
+    if (!heroMarquee || typeof HERO_REVIEWS === "undefined") return;
+
+    const columns = Array.from({ length: MARQUEE_COLUMNS }, () => []);
+    HERO_REVIEWS.forEach((rv, i) => columns[i % MARQUEE_COLUMNS].push(rv));
+
+    heroMarquee.innerHTML = columns
+      .map((items, i) => {
+        const cards = items.map(reviewCardHTML).join("");
+        // 끊김 없는 무한 루프를 위해 같은 묶음을 한 번 더 복제 (복제본은 스크린리더에서 제외)
+        return `
+          <div class="mq-col mq-col-${i + 1}">
+            <div class="mq-inner">
+              ${cards}
+              <div class="mq-dup" aria-hidden="true">${cards}</div>
+            </div>
+          </div>
+        `;
+      })
+      .join("");
+  }
 
   function renderChips() {
     filterChips.innerHTML = "";
@@ -61,15 +104,27 @@
     emptyState.hidden = true;
 
     list.forEach((r) => {
-      const card = document.createElement("button");
+      const card = document.createElement("article");
       card.className = "card";
-      card.type = "button";
       card.innerHTML = `
-        <div class="card-img"><img src="${r.img}" alt="${r.name}"></div>
-        <div class="card-body">
-          <p class="card-category">${r.category}</p>
-          <h3 class="card-name">${r.name}</h3>
-          <p class="card-meta">${r.area} · ${r.tag}</p>
+        <img class="card-bg" src="${r.img}" alt="${r.name}">
+        <div class="card-overlay">
+          <div class="card-top">
+            <div class="card-badges">
+              <span class="card-badge"><span class="card-badge-dot"></span>${r.category}</span>
+              <span class="card-badge">★ ${getAverageRating(r).toFixed(1)} · 리뷰 ${r.reviews.length}개<span class="card-badge-dot"></span></span>
+            </div>
+            <span class="card-arrow" aria-hidden="true">↗</span>
+          </div>
+          <div class="card-bottom">
+            <p class="card-area">${r.area} · ${r.tag}</p>
+            <h3 class="card-name">${r.name}</h3>
+            <p class="card-desc">${r.description}</p>
+            <button class="card-cta" type="button">
+              리뷰 보기
+              <span class="card-cta-icon" aria-hidden="true">›</span>
+            </button>
+          </div>
         </div>
       `;
       card.addEventListener("click", () => openModal(r));
@@ -87,11 +142,19 @@
     }, 200);
   });
 
+  // 카드 하나 + gap 만큼 스크롤 (카드 폭은 브레이크포인트마다 다름)
+  function getScrollStep() {
+    const card = cardTrack.querySelector(".card");
+    if (!card) return 300;
+    const gap = parseFloat(getComputedStyle(cardTrack).columnGap) || 0;
+    return card.offsetWidth + gap;
+  }
+
   arrowPrev.addEventListener("click", () => {
-    cardTrack.scrollBy({ left: -300, behavior: "smooth" });
+    cardTrack.scrollBy({ left: -getScrollStep(), behavior: "smooth" });
   });
   arrowNext.addEventListener("click", () => {
-    cardTrack.scrollBy({ left: 300, behavior: "smooth" });
+    cardTrack.scrollBy({ left: getScrollStep(), behavior: "smooth" });
   });
 
   function getAverageRating(restaurant) {
@@ -164,6 +227,7 @@
     if (e.key === "Escape" && !modalOverlay.hidden) closeModal();
   });
 
+  renderHeroMarquee();
   renderChips();
   renderCards();
 })();
