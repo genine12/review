@@ -1,0 +1,10 @@
+# 로컬 전용 환경변수 — 카카오 REST API 키가 들어가므로 절대 커밋하지 않는다.
+.env
+.env.local
+
+# 구버전 키 파일(=.env로 이관됨). 남아 있어도 커밋되지 않도록 유지.
+js/config.js
+
+# OS / 에디터
+.DS_Store
+Thumbs.db

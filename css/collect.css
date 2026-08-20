@@ -1,0 +1,490 @@
+/* ==========================================================
+   맛집 담기 페이지 (collect.html) 전용 스타일
+   - 색·폰트·라운드·그림자는 style.css :root 토큰만 사용한다.
+   - TEAM.md §2 클래스 계약에 있는 이름에만 스타일을 건다.
+   - 모바일 퍼스트 (375 → 768 → 1440)
+   ========================================================== */
+
+/* ---------- 페이지 레이아웃 ---------- */
+.collect-page {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 40px 20px 80px;
+}
+
+.collect-page h1 {
+  font-size: clamp(1.7rem, 4vw, 2.4rem);
+  letter-spacing: -0.02em;
+}
+
+/* ---------- 검색 ---------- */
+.collect-search {
+  margin-top: 28px;
+}
+
+.collect-search__form {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.collect-search__input {
+  /* min-width: 0 이 없으면 375px에서 input이 가로 스크롤을 만든다 */
+  flex: 1 1 auto;
+  min-width: 0;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--color-bg);
+  box-shadow: var(--shadow-soft);
+  padding: 14px 20px;
+  font-size: 0.95rem;
+  color: var(--color-text);
+}
+
+.collect-search__input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.collect-search__input:focus {
+  outline: none;
+  box-shadow: var(--shadow-soft), inset 0 0 0 2px var(--color-text);
+}
+
+.collect-search__submit {
+  flex: 0 0 auto;
+  padding: 14px 24px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+  border-radius: var(--radius-pill);
+  background: var(--color-point);
+  color: var(--color-point-text);
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.collect-search__submit:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-soft);
+}
+
+/* ---------- 카테고리 칩 ---------- */
+.collect-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+/* 테두리 대신 면(bg-alt)으로 구분 */
+.collect-chip {
+  padding: 9px 18px;
+  font-size: 0.85rem;
+  color: var(--color-text);
+  border-radius: var(--radius-pill);
+  background: var(--color-bg-alt);
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.collect-chip:hover {
+  transform: translateY(-1px);
+}
+
+.collect-chip.is-active {
+  background: var(--color-point);
+  color: var(--color-point-text);
+  font-weight: 600;
+}
+
+/* ---------- 상태 메시지 (로딩 / 에러 / 빈 결과) ---------- */
+.collect-status {
+  display: block;
+  margin-top: 28px;
+  padding: 32px 20px;
+  text-align: center;
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
+  border-radius: var(--radius);
+}
+
+/* 로딩: 차분하게, 은은한 호흡 */
+.collect-status.is-loading {
+  background: var(--color-bg-alt);
+  animation: collect-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes collect-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+/* 에러: 눈에 띄되 공격적이지 않게 — 면은 그대로 두고 글자만 저채도 벽돌색 */
+.collect-status.is-error {
+  background: var(--color-bg-alt);
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+/* 빈 결과: 조용하게 */
+.collect-status.is-empty {
+  background: transparent;
+  color: var(--color-text-muted);
+}
+
+/* ---------- 결과 그리드 ---------- */
+.collect-results {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-top: 28px;
+}
+
+/* ---------- 결과 카드 ---------- */
+.collect-card {
+  /* min-width: 0 으로 긴 상호명이 그리드를 밀어내지 못하게 막는다 */
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.collect-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lift);
+}
+
+/* 카카오 로컬 API는 이미지를 주지 않으므로 썸네일은 플레이스홀더 상태로도 성립해야 한다 */
+.collect-card__thumb {
+  flex: 0 0 auto;
+  aspect-ratio: 4 / 3;
+  background: var(--color-bg-alt);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  color: var(--color-text-muted);
+  overflow: hidden;
+}
+
+.collect-card__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.collect-card__body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 20px;
+}
+
+.collect-card__name {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  font-size: 1.15rem;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+  /* 긴 상호명 대응: 단어 단위 줄바꿈 + 2줄 말줄임 */
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 카테고리는 아이브로우처럼 상호명 위에 (마크업 순서와 무관하게 order로 고정) */
+.collect-card__category {
+  order: -1;
+  display: inline-block;
+  max-width: 100%;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+  background: var(--color-bg-alt);
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.collect-card__address {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.collect-card__phone,
+.collect-card__distance {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 밑줄은 border 대신 inset 그림자로 — 호버 시 포인트 컬러 형광펜 */
+.collect-card__link {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text);
+  padding: 2px 0;
+  box-shadow: inset 0 -1px 0 var(--color-text);
+  transition: box-shadow 0.2s ease;
+}
+
+.collect-card__link:hover {
+  box-shadow: inset 0 -0.5em 0 var(--color-point);
+}
+
+/* 담기: 기본은 검정 면(주요 액션), 담긴 뒤에는 포인트 컬러로 완료 표시 */
+.collect-card__save {
+  margin-top: auto;
+  width: 100%;
+  padding: 13px 18px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  border-radius: var(--radius-pill);
+  background: var(--color-text);
+  color: var(--color-bg);
+  transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+
+.collect-card__save:hover {
+  transform: translateY(-1px);
+}
+
+.collect-card__save.is-saved {
+  background: var(--color-point);
+  color: var(--color-point-text);
+}
+
+/* ---------- 담은 목록 ---------- */
+.collect-saved {
+  margin-top: 64px;
+  padding: 28px 20px;
+  background: var(--color-bg-alt);
+  border-radius: var(--radius);
+}
+
+.collect-saved h2,
+.collect-saved h3 {
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+}
+
+/* 제목(세리프/디스플레이 폰트) 안에 들어가므로 본문 폰트로 되돌려 UI 배지처럼 보이게 한다 */
+.collect-saved__count {
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 4px;
+  font-family: var(--font-body);
+  padding: 4px 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  background: var(--color-point);
+  color: var(--color-point-text);
+  border-radius: var(--radius-pill);
+}
+
+.collect-saved__list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+/* 담은 목록에서는 같은 카드를 가로형·조밀하게 재사용 */
+.collect-saved__list .collect-card {
+  flex-direction: row;
+  align-items: stretch;
+  border-radius: var(--radius-sm);
+  box-shadow: none;
+}
+
+.collect-saved__list .collect-card:hover {
+  transform: none;
+  box-shadow: var(--shadow-soft);
+}
+
+.collect-saved__list .collect-card__thumb {
+  flex: 0 0 84px;
+  aspect-ratio: 1 / 1;
+  font-size: 1.1rem;
+}
+
+.collect-saved__list .collect-card__body {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  padding: 12px 14px;
+}
+
+.collect-saved__list .collect-card__name {
+  font-size: 1rem;
+  -webkit-line-clamp: 1;
+}
+
+.collect-saved__list .collect-card__address {
+  flex: 1 1 100%;
+  font-size: 0.8rem;
+  -webkit-line-clamp: 1;
+}
+
+.collect-saved__list .collect-card__save {
+  margin-top: 0;
+  margin-left: auto;
+  width: auto;
+  padding: 9px 16px;
+  font-size: 0.8rem;
+}
+
+/* ---------- 더보기 ---------- */
+.collect-more {
+  display: block;
+  margin: 32px auto 0;
+  padding: 14px 32px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text);
+  background: var(--color-bg-alt);
+  border-radius: var(--radius-pill);
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+.collect-more:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-soft);
+}
+
+/* ---------- hidden 속성 ---------- */
+/* display 를 직접 지정한 요소는 hidden 속성을 다시 눌러줘야 한다.
+   값이 없는 카테고리/주소/전화/거리/링크는 logic이 hidden으로 비운다. */
+.collect-search[hidden],
+.collect-categories[hidden],
+.collect-status[hidden],
+.collect-results[hidden],
+.collect-card[hidden],
+.collect-card__thumb[hidden],
+.collect-card__name[hidden],
+.collect-card__category[hidden],
+.collect-card__address[hidden],
+.collect-card__phone[hidden],
+.collect-card__distance[hidden],
+.collect-card__link[hidden],
+.collect-card__save[hidden],
+.collect-saved[hidden],
+.collect-saved__count[hidden],
+.collect-saved__list[hidden],
+.collect-more[hidden] {
+  display: none;
+}
+
+/* ---------- 포커스 링 ---------- */
+.collect-search__input:focus-visible,
+.collect-search__submit:focus-visible,
+.collect-chip:focus-visible,
+.collect-card__link:focus-visible,
+.collect-card__save:focus-visible,
+.collect-more:focus-visible {
+  outline: 2px solid var(--color-text);
+  outline-offset: 3px;
+}
+
+/* 검정 면 위에서는 대비를 위해 포인트 컬러 링 */
+.collect-card__save:focus-visible {
+  outline-color: var(--color-point);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .collect-status.is-loading { animation: none; }
+
+  .collect-card,
+  .collect-chip,
+  .collect-more,
+  .collect-search__submit,
+  .collect-card__save { transition: none; }
+}
+
+/* ---------- 반응형: 태블릿 (768) ---------- */
+@media (min-width: 768px) {
+  .collect-page {
+    padding: 56px 20px 96px;
+  }
+
+  .collect-search__input {
+    padding: 15px 24px;
+    font-size: 1rem;
+  }
+
+  .collect-results {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+
+  .collect-saved {
+    padding: 32px 28px;
+  }
+
+  .collect-saved__list {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+}
+
+/* ---------- 반응형: 데스크탑 진입 (1200부터 3열) ---------- */
+@media (min-width: 1200px) {
+  .collect-results {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+
+  .collect-saved__list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ---------- 반응형: 데스크탑 (1440) ---------- */
+@media (min-width: 1440px) {
+  .collect-page {
+    padding: 72px 20px 120px;
+  }
+
+  .collect-search {
+    margin-top: 36px;
+  }
+
+  .collect-results {
+    gap: 28px;
+    margin-top: 36px;
+  }
+
+  .collect-card__body {
+    padding: 22px 24px;
+  }
+
+  .collect-card__name {
+    font-size: 1.25rem;
+  }
+
+  .collect-saved {
+    margin-top: 88px;
+    padding: 40px;
+  }
+}

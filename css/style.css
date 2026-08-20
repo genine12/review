@@ -20,6 +20,8 @@
   --color-text-muted: #666666;
   --color-point: #FFF67E;
   --color-point-text: #111111;
+  /* 에러 상태 전용. 흑백 기조를 깨지 않도록 저채도 벽돌빛으로 제한 */
+  --color-danger: #B4413A;
 
   --container-max: 1200px;
   --header-height: 64px;
@@ -29,6 +31,7 @@
   --radius-sm: 14px;   /* 썸네일처럼 작은 박스 */
   --radius-pill: 999px; /* 칩·버튼 등 컨트롤 */
   --shadow-soft: 0 6px 20px rgba(17, 17, 17, 0.08);
+  --shadow-lift: 0 14px 32px rgba(17, 17, 17, 0.14); /* 카드 호버 시 한 단계 깊은 그림자 */
 }
 
 /* ---------- Reset ---------- */
@@ -120,6 +123,44 @@ input { font-family: inherit; }
 
 .site-nav a:hover { background: var(--color-bg-alt); }
 
+
+/* ---------- Header nav CTA ---------- */
+/* 다른 페이지로 나가는 유일한 링크라 앵커들과 시각적으로 구분한다.
+   모바일에서는 항목이 4개가 되므로 간격·글자를 줄이고, 그보다 더 좁은 화면에서는
+   페이지가 아니라 네비 안에서만 가로로 밀리게 한다. */
+.site-nav {
+  min-width: 0;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.site-nav::-webkit-scrollbar { display: none; }
+
+.site-nav a {
+  flex: 0 0 auto;
+  padding: 6px 8px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+/* 앵커가 아닌 페이지 이동 링크는 포인트 컬러 pill로 */
+.site-nav .nav-cta {
+  background: var(--color-point);
+  color: var(--color-point-text);
+  font-weight: 600;
+}
+
+.site-nav .nav-cta:hover {
+  background: var(--color-point);
+  box-shadow: var(--shadow-soft);
+}
+
+.site-nav a:focus-visible {
+  outline: 2px solid var(--color-text);
+  outline-offset: 2px;
+}
 /* ---------- Hero ---------- */
 .hero {
   min-height: calc(90vh - var(--header-height));
@@ -799,6 +840,17 @@ input { font-family: inherit; }
 
 /* ---------- Responsive ---------- */
 @media (min-width: 768px) {
+  /* 네비 항목이 여유롭게 들어가므로 원래 간격·크기로 복귀 */
+  .site-nav {
+    gap: 24px;
+    overflow-x: visible;
+  }
+
+  .site-nav a {
+    padding: 6px 14px;
+    font-size: 0.9rem;
+  }
+
   .hero-inner {
     grid-template-columns: 0.9fr 1.1fr;
   }
