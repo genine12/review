@@ -165,6 +165,7 @@
   align-items: flex-start;
   gap: 8px;
   padding: 20px;
+  cursor: pointer;
 }
 
 .collect-card__name {
@@ -251,6 +252,208 @@
 .collect-card__save.is-saved {
   background: var(--color-point);
   color: var(--color-point-text);
+}
+
+/* ---------- 리뷰/AI 분석 오버레이 ---------- */
+.collect-detail-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 17, 17, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 20px;
+}
+
+.collect-detail-card {
+  background: var(--color-bg);
+  max-width: 640px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  border-radius: var(--radius);
+  position: relative;
+}
+
+.collect-detail-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--color-bg);
+  box-shadow: var(--shadow-soft);
+  font-size: 1.3rem;
+  line-height: 1;
+  z-index: 2;
+}
+
+.collect-detail-body {
+  padding: 28px;
+}
+
+.collect-detail-body #collect-detail-name {
+  font-size: 1.4rem;
+  letter-spacing: -0.02em;
+  padding-right: 32px;
+}
+
+.collect-review-summary {
+  margin-top: 14px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.collect-review-status {
+  margin-top: 14px;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.collect-review-status.is-loading {
+  animation: collect-pulse 1.4s ease-in-out infinite;
+}
+
+.collect-review-status.is-error {
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+.collect-review-list {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.collect-review-item {
+  padding-left: 12px;
+  border-left: 2px solid var(--color-point);
+}
+
+.collect-review-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 0.78rem;
+}
+
+.collect-review-author {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.collect-review-stars {
+  color: var(--color-text);
+  letter-spacing: 0.02em;
+}
+
+.collect-review-time {
+  color: var(--color-text-muted);
+}
+
+.collect-review-text {
+  margin-top: 4px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.collect-review-link {
+  display: inline-block;
+  margin-top: 14px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text);
+  padding: 2px 0;
+  box-shadow: inset 0 -1px 0 var(--color-text);
+  transition: box-shadow 0.2s ease;
+}
+
+.collect-review-link:hover {
+  box-shadow: inset 0 -0.5em 0 var(--color-point);
+}
+
+/* ---------- AI 리뷰 분석 ---------- */
+.collect-analysis {
+  margin-top: 24px;
+  padding: 18px;
+  background: var(--color-bg-alt);
+  border-radius: var(--radius-sm);
+}
+
+.collect-analysis-status {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.collect-analysis-status.is-loading {
+  animation: collect-pulse 1.4s ease-in-out infinite;
+}
+
+.collect-analysis-status.is-error {
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+.collect-sentiment-bar {
+  display: flex;
+  height: 10px;
+  margin-top: 4px;
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  background: var(--color-bg);
+}
+
+/* 세그먼트 너비(%)는 데이터값이라 JS가 style.width로 채운다 — TEAM.md에 명시된 유일한 인라인 스타일 예외 */
+.collect-sentiment-bar__segment.is-positive { background: var(--color-positive); }
+.collect-sentiment-bar__segment.is-neutral { background: var(--color-neutral); }
+.collect-sentiment-bar__segment.is-negative { background: var(--color-danger); }
+
+.collect-sentiment-legend {
+  display: flex;
+  gap: 14px;
+  margin-top: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.collect-sentiment-legend .is-positive { color: var(--color-positive); }
+.collect-sentiment-legend .is-neutral { color: var(--color-neutral); }
+.collect-sentiment-legend .is-negative { color: var(--color-danger); }
+
+.collect-wordcloud {
+  display: block;
+  width: 100%;
+  height: 160px;
+  margin-top: 16px;
+}
+
+/* 말풍선: 배경 블록 + 위쪽 삼각형 꼬리 */
+.collect-analysis-summary {
+  position: relative;
+  margin-top: 16px;
+  padding: 14px 16px;
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.collect-analysis-summary::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: 20px;
+  width: 12px;
+  height: 12px;
+  background: var(--color-bg);
+  transform: rotate(45deg);
 }
 
 /* ---------- 담은 목록 ---------- */
@@ -362,6 +565,10 @@
 .collect-card__distance[hidden],
 .collect-card__link[hidden],
 .collect-card__save[hidden],
+.collect-review-link[hidden],
+.collect-analysis[hidden],
+.collect-wordcloud[hidden],
+.collect-detail-overlay[hidden],
 .collect-saved[hidden],
 .collect-saved__count[hidden],
 .collect-saved__list[hidden],
@@ -375,6 +582,8 @@
 .collect-chip:focus-visible,
 .collect-card__link:focus-visible,
 .collect-card__save:focus-visible,
+.collect-review-link:focus-visible,
+.collect-detail-close:focus-visible,
 .collect-more:focus-visible {
   outline: 2px solid var(--color-text);
   outline-offset: 3px;
@@ -386,7 +595,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .collect-status.is-loading { animation: none; }
+  .collect-status.is-loading,
+  .collect-review-status.is-loading,
+  .collect-analysis-status.is-loading { animation: none; }
 
   .collect-card,
   .collect-chip,

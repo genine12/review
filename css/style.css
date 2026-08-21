@@ -22,6 +22,10 @@
   --color-point-text: #111111;
   /* 에러 상태 전용. 흑백 기조를 깨지 않도록 저채도 벽돌빛으로 제한 */
   --color-danger: #B4413A;
+  /* 리뷰 AI 분석(감정 막대·워드클라우드) 전용. 데이터 시각화라는 기능적 목적으로만 쓴다 —
+     부정/나쁜 맥락은 새 색을 만들지 않고 위 --color-danger를 그대로 재사용한다. */
+  --color-positive: #2F9E44;
+  --color-neutral: #E8B923;
 
   --container-max: 1200px;
   --header-height: 64px;

@@ -13,8 +13,15 @@
   const savedCount = document.getElementById("collect-saved-count");
   const savedList = document.getElementById("collect-saved-list");
   const moreButton = document.getElementById("collect-more");
+  const detailOverlay = document.getElementById("collect-detail-overlay");
+  const detailClose = document.getElementById("collect-detail-close");
+  const detailBody = document.getElementById("collect-detail-body");
 
   const STORAGE_KEY = "mideok.collect.saved.v1";
+  // 한 번 조회한 가게의 구글 리뷰를 캐시한다: { [placeId]: normalizedGoogleData }
+  const REVIEW_STORAGE_KEY = "mideok.collect.reviews.v1";
+  // 한 번 분석한 가게의 AI 분석 결과를 캐시한다: { [placeId]: {sentimentCounts, keywords, summary} }
+  const ANALYSIS_STORAGE_KEY = "mideok.collect.analysis.v1";
 
   // 검색어에 덧붙는 보조 키워드 + 카테고리 그룹 코드
   const CATEGORY_FILTERS = [
@@ -32,16 +39,25 @@
     EMPTY_RESULT: "검색 결과가 없어요. 다른 키워드로 찾아보세요.",
     NEED_KEYWORD: "지역이나 음식 이름으로 검색해보세요. 예) 성수 파스타",
     NO_LOADER: "설정을 읽는 스크립트를 불러오지 못했어요. 페이지를 새로고침해주세요.",
+    REVIEW_LOADING: "리뷰를 불러오는 중 ...",
+    REVIEW_EMPTY: "아직 등록된 리뷰가 없어요.",
+    REVIEW_NO_COORDS: "좌표 정보가 없어 리뷰를 찾을 수 없어요.",
+    ANALYSIS_LOADING: "AI가 리뷰를 분석하는 중...",
   };
 
   let activeFilter = CATEGORY_FILTERS[0];
   let currentQuery = "";
   let currentPage = 1;
   let savedPlaces = loadSaved();
+  let reviewCache = loadReviewCache();
+  let analysisCache = loadAnalysisCache();
   // 사용자가 검색을 시작했는지. 설정 확인(ping)이 늦게 끝나도 검색 결과를 덮어쓰지 않기 위해 본다.
   let hasSearched = false;
   // 가장 최신 요청만 화면에 반영한다(늦게 도착한 이전 응답이 결과를 덮는 것을 막는다).
   let requestToken = 0;
+  // 오버레이가 지금 어떤 가게를 보여주고 있는지 추적한다. 열기/닫기마다 증가시켜서
+  // 늦게 도착한 이전 요청(리뷰/분석)이 다른 가게의 화면을 덮지 않게 막는다.
+  let detailToken = 0;
   // 현재 결과에 그려둔 장소 원본. 담기 버튼을 누를 때 화면 문자열이 아니라 이 값을 저장한다.
   const renderedPlaces = new Map();
 
@@ -120,6 +136,44 @@
     return savedPlaces.some((place) => place.id === id);
   }
 
+  // 구글 리뷰 캐시. 만료 없음 — 한 번 조회하면 같은 세션/브라우저에서는 다시 요청하지 않는다.
+  function loadReviewCache() {
+    try {
+      const raw = window.localStorage.getItem(REVIEW_STORAGE_KEY);
+      const parsed = raw ? JSON.parse(raw) : {};
+      return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function persistReviewCache() {
+    try {
+      window.localStorage.setItem(REVIEW_STORAGE_KEY, JSON.stringify(reviewCache));
+    } catch (e) {
+      // 저장에 실패해도 화면 동작은 그대로 유지한다.
+    }
+  }
+
+  // AI 분석 캐시. 리뷰 캐시와 같은 방어적 패턴 — 만료 없음.
+  function loadAnalysisCache() {
+    try {
+      const raw = window.localStorage.getItem(ANALYSIS_STORAGE_KEY);
+      const parsed = raw ? JSON.parse(raw) : {};
+      return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function persistAnalysisCache() {
+    try {
+      window.localStorage.setItem(ANALYSIS_STORAGE_KEY, JSON.stringify(analysisCache));
+    } catch (e) {
+      // 저장에 실패해도 화면 동작은 그대로 유지한다.
+    }
+  }
+
   /* ---------- 카드 렌더링 ---------- */
 
   function createCard(place) {
@@ -187,6 +241,198 @@
   // 담은 목록에서 뺄 때는 결과 카드가 없을 수도 있어 양쪽을 모두 본다.
   function findPlaceById(id) {
     return renderedPlaces.get(id) || savedPlaces.find((place) => place.id === id) || null;
+  }
+
+  /* ---------- 리뷰/AI 분석 오버레이 ---------- */
+
+  function buildReviewSummaryText(data) {
+    const ratingText = typeof data.rating === "number" ? data.rating.toFixed(1) : "정보 없음";
+    return `⭐ ${ratingText} · 리뷰 ${data.reviewCount}개`;
+  }
+
+  function renderDetailLoading(name) {
+    detailBody.innerHTML = `
+      <h3 id="collect-detail-name">${escapeHTML(name)}</h3>
+      <p class="collect-review-status is-loading">${escapeHTML(STATUS_TEXT.REVIEW_LOADING)}</p>
+    `;
+  }
+
+  function renderDetailError(name, message) {
+    detailBody.innerHTML = `
+      <h3 id="collect-detail-name">${escapeHTML(name)}</h3>
+      <p class="collect-review-status is-error">${escapeHTML(message)}</p>
+    `;
+  }
+
+  // 리뷰 목록 + (있으면) AI 분석 컨테이너를 함께 그린다. 분석은 리뷰가 1개 이상일 때만 보인다.
+  function renderDetailReviews(place, data) {
+    const reviewsHtml = data.reviews.length
+      ? `<ul class="collect-review-list">${data.reviews
+          .map(
+            (review) => `
+        <li class="collect-review-item">
+          <p class="collect-review-meta">
+            <span class="collect-review-author">${escapeHTML(review.author)}</span>
+            <span class="collect-review-stars">${"★".repeat(Math.max(0, Math.round(review.rating || 0)))}</span>
+            <span class="collect-review-time">${escapeHTML(review.relativeTime)}</span>
+          </p>
+          <p class="collect-review-text">${escapeHTML(review.text)}</p>
+        </li>
+      `
+          )
+          .join("")}</ul>`
+      : `<p class="collect-review-status is-empty">${escapeHTML(STATUS_TEXT.REVIEW_EMPTY)}</p>`;
+
+    detailBody.innerHTML = `
+      <h3 id="collect-detail-name">${escapeHTML(place.name)}</h3>
+      <p class="collect-review-summary">${escapeHTML(buildReviewSummaryText(data))}</p>
+      ${reviewsHtml}
+      <div class="collect-analysis"${data.reviews.length ? "" : " hidden"}></div>
+      <a class="collect-review-link" href="${escapeHTML(data.googleMapsUrl)}" target="_blank" rel="noopener"${data.googleMapsUrl ? "" : " hidden"}>구글맵에서 전체 리뷰 보기 →</a>
+    `;
+  }
+
+  function openDetailOverlay(place) {
+    const token = ++detailToken;
+
+    renderDetailLoading(place.name);
+    detailOverlay.hidden = false;
+    document.body.style.overflow = "hidden";
+
+    const cached = reviewCache[place.id];
+    if (cached) {
+      renderDetailReviews(place, cached);
+      maybeRunAnalysis(token, place, cached);
+      return;
+    }
+
+    fetchAndRenderReviews(token, place);
+  }
+
+  function closeDetailOverlay() {
+    // 열려 있던 요청/분석이 더 이상 화면에 반영되지 않도록 토큰을 무효화한다.
+    detailToken++;
+    detailOverlay.hidden = true;
+    document.body.style.overflow = "";
+  }
+
+  async function fetchAndRenderReviews(token, place) {
+    if (!window.GoogleReviews) {
+      renderDetailError(place.name, STATUS_TEXT.NO_LOADER);
+      return;
+    }
+
+    if (place.lat == null || place.lng == null) {
+      renderDetailError(place.name, STATUS_TEXT.REVIEW_NO_COORDS);
+      return;
+    }
+
+    try {
+      const data = await window.GoogleReviews.fetchReviews({ name: place.name, lat: place.lat, lng: place.lng });
+      reviewCache[place.id] = data;
+      persistReviewCache();
+
+      // 응답이 오는 사이 다른 가게를 열었거나 오버레이를 닫았으면 반영하지 않는다.
+      if (token !== detailToken || detailOverlay.hidden) return;
+      renderDetailReviews(place, data);
+      maybeRunAnalysis(token, place, data);
+    } catch (error) {
+      if (token !== detailToken || detailOverlay.hidden) return;
+      renderDetailError(place.name, error.message);
+    }
+  }
+
+  // 리뷰가 화면에 뜨면(캐시 히트든 신규 fetch든) 이어서 자동으로 분석을 시작한다.
+  async function maybeRunAnalysis(token, place, reviewData) {
+    if (!reviewData.reviews.length) return; // 컨테이너가 이미 hidden으로 렌더돼 있다.
+
+    const analysisBox = detailBody.querySelector(".collect-analysis");
+    if (!analysisBox) return;
+
+    const cachedAnalysis = analysisCache[place.id];
+    if (cachedAnalysis) {
+      renderAnalysis(analysisBox, cachedAnalysis);
+      return;
+    }
+
+    if (!window.GeminiAnalyze) {
+      analysisBox.innerHTML = `<p class="collect-analysis-status is-error">${escapeHTML(STATUS_TEXT.NO_LOADER)}</p>`;
+      return;
+    }
+
+    analysisBox.innerHTML = `<p class="collect-analysis-status is-loading">${escapeHTML(STATUS_TEXT.ANALYSIS_LOADING)}</p>`;
+
+    try {
+      const analysis = await window.GeminiAnalyze.analyzeReviews(reviewData.reviews);
+      analysisCache[place.id] = analysis;
+      persistAnalysisCache();
+
+      if (token !== detailToken || detailOverlay.hidden) return;
+      // 그 사이 detailBody가 다시 그려졌을 수 있어 컨테이너를 다시 찾는다.
+      const box = detailBody.querySelector(".collect-analysis");
+      if (box) renderAnalysis(box, analysis);
+    } catch (error) {
+      if (token !== detailToken || detailOverlay.hidden) return;
+      const box = detailBody.querySelector(".collect-analysis");
+      if (box) box.innerHTML = `<p class="collect-analysis-status is-error">${escapeHTML(error.message)}</p>`;
+    }
+  }
+
+  function renderAnalysis(analysisBox, analysis) {
+    const counts = analysis.sentimentCounts;
+    const total = counts.positive + counts.neutral + counts.negative || 1;
+    const pct = (n) => (n / total) * 100;
+
+    analysisBox.innerHTML = `
+      <p class="eyebrow">AI 리뷰 분석</p>
+      <div class="collect-sentiment-bar" role="img" aria-label="긍정 ${counts.positive}개, 보통 ${counts.neutral}개, 부정 ${counts.negative}개">
+        <span class="collect-sentiment-bar__segment is-positive"></span>
+        <span class="collect-sentiment-bar__segment is-neutral"></span>
+        <span class="collect-sentiment-bar__segment is-negative"></span>
+      </div>
+      <p class="collect-sentiment-legend">
+        <span class="is-positive">긍정 ${counts.positive}</span>
+        <span class="is-neutral">보통 ${counts.neutral}</span>
+        <span class="is-negative">부정 ${counts.negative}</span>
+      </p>
+      <canvas class="collect-wordcloud"${analysis.keywords.length ? "" : " hidden"}></canvas>
+      <p class="collect-analysis-summary">${escapeHTML(analysis.summary)}</p>
+    `;
+
+    // 연속값(%)이라 CSS 클래스로 표현할 수 없는 유일한 예외 — TEAM.md에 명시된 예외.
+    const segments = analysisBox.querySelectorAll(".collect-sentiment-bar__segment");
+    segments[0].style.width = pct(counts.positive) + "%";
+    segments[1].style.width = pct(counts.neutral) + "%";
+    segments[2].style.width = pct(counts.negative) + "%";
+
+    const canvas = analysisBox.querySelector(".collect-wordcloud");
+    if (canvas && !canvas.hidden) renderWordCloud(canvas, analysis.keywords);
+  }
+
+  function renderWordCloud(canvas, keywords) {
+    if (!window.WordCloud || !keywords.length) {
+      canvas.hidden = true;
+      return;
+    }
+
+    canvas.hidden = false;
+    canvas.width = canvas.clientWidth || 320;
+    canvas.height = 160;
+
+    const rootStyles = getComputedStyle(document.documentElement);
+    const positiveColor = rootStyles.getPropertyValue("--color-positive").trim() || "#2F9E44";
+    const negativeColor = rootStyles.getPropertyValue("--color-danger").trim() || "#B4413A";
+    const contextByWord = new Map(keywords.map((k) => [k.word, k.context]));
+
+    window.WordCloud(canvas, {
+      list: keywords.map((k) => [k.word, Math.max(1, k.score)]),
+      weightFactor: (size) => 8 + size * 3.2,
+      color: (word) => (contextByWord.get(word) === "negative" ? negativeColor : positiveColor),
+      fontFamily: getComputedStyle(document.body).fontFamily,
+      backgroundColor: "transparent",
+      rotateRatio: 0,
+      gridSize: 8,
+    });
   }
 
   /* ---------- 카테고리 칩 ---------- */
@@ -296,17 +542,36 @@
 
   moreButton.addEventListener("click", loadMore);
 
-  // 카드는 계속 다시 그려지므로 담기 버튼은 이벤트 위임으로 받는다.
-  function handleSaveClick(e) {
-    const button = e.target.closest(".collect-card__save");
-    if (!button) return;
-    const card = button.closest(".collect-card");
+  // 카드는 계속 다시 그려지므로 클릭은 이벤트 위임으로 받는다.
+  // 담기 버튼 → 담기/빼기, 카카오맵 링크 → 기본 동작(새 탭), 그 외 카드 클릭 → 리뷰/분석 오버레이 열기.
+  function handleCardClick(e) {
+    const saveButton = e.target.closest(".collect-card__save");
+    if (saveButton) {
+      const card = saveButton.closest(".collect-card");
+      if (card) toggleSave(card.dataset.id);
+      return;
+    }
+
+    if (e.target.closest(".collect-card__link")) return;
+
+    const card = e.target.closest(".collect-card");
     if (!card) return;
-    toggleSave(card.dataset.id);
+    const place = findPlaceById(card.dataset.id);
+    if (!place) return;
+    openDetailOverlay(place);
   }
 
-  resultsBox.addEventListener("click", handleSaveClick);
-  savedList.addEventListener("click", handleSaveClick);
+  resultsBox.addEventListener("click", handleCardClick);
+  savedList.addEventListener("click", handleCardClick);
+
+  // index.html의 기존 데모 모달과 같은 상호작용 관례(닫기 버튼/배경 클릭/Escape).
+  detailClose.addEventListener("click", closeDetailOverlay);
+  detailOverlay.addEventListener("click", (e) => {
+    if (e.target === detailOverlay) closeDetailOverlay();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !detailOverlay.hidden) closeDetailOverlay();
+  });
 
   /* ---------- 초기 렌더 ---------- */
 

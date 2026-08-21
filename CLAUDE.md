@@ -12,10 +12,13 @@
 
 ## 명령어
 
-빌드 단계, 패키지 매니저, 테스트 스위트가 없습니다 — 의존성 없는 정적 HTML/CSS/JS 사이트입니다. 예외는 `api/kakao-search.js`(Vercel Serverless Function) 하나뿐입니다.
+빌드 단계, 패키지 매니저, 테스트 스위트가 없습니다 — 의존성 없는 정적 HTML/CSS/JS 사이트입니다. 예외는 `api/kakao-search.js`, `api/google-reviews.js`, `api/gemini-analyze.js`(Vercel Serverless Functions) 뿐입니다.
 
 - **로컬 실행 (`index.html`)**: 브라우저에서 바로 열면 됩니다 (`file://`로 동작, 서버 불필요).
-- **로컬 실행 (`collect.html`)**: `vercel dev`로 실행해야 합니다. `api/kakao-search.js`가 서버 함수라 일반 정적 서버(`file://`, `python -m http.server` 등)로는 카카오 검색이 동작하지 않습니다. 저장소 루트에 `.env`(`.env.example` 참고, `KAKAO_REST_API_KEY=...`)를 두면 `vercel dev`가 자동으로 읽습니다.
+- **로컬 실행 (`collect.html`)**: `api/*.js`가 서버 함수라 일반 정적 서버(`file://`, `python -m http.server` 등)로는 카카오 검색/구글 리뷰/AI 분석이 동작하지 않습니다. 둘 중 하나로 실행하세요.
+  - `vercel dev` — Vercel CLI 설치 + 로그인이 필요하지만 실제 배포 환경과 가장 가깝습니다.
+  - `node scripts/dev-server.js` — 설치/로그인 없이 바로 실행되는 의존성 없는 대체 서버(`http://localhost:3000`). `api/*.js` 핸들러를 그대로 불러와 실행하므로 동작은 동일하지만, 코드 수정 후 반영하려면 서버를 재시작해야 합니다(핫 리로드 없음).
+  - 둘 다 저장소 루트 `.env`(`.env.example` 참고, `KAKAO_REST_API_KEY=...`, `GOOGLE_PLACES_API_KEY=...`, `GEMINI_API_KEY=...`)를 자동으로 읽습니다.
 - 실행할 lint/build/test 명령어는 없습니다.
 
 ## 아키텍처
@@ -34,12 +37,18 @@
 
 ### 맛집 담기 페이지 (`collect.html`)
 
-카카오 로컬 API로 실제 장소를 검색해 `localStorage`에 담아두는 별도 페이지입니다(데모 섹션의 목업 데이터와 무관).
+카카오 로컬 API로 실제 장소를 검색해 `localStorage`에 담아두는 별도 페이지입니다(데모 섹션의 목업 데이터와 무관). 카드를 클릭하면 화면 중앙 오버레이(`.collect-detail-overlay`)가 뜨며 구글 Places API(New)로 조회한 별점/리뷰와, 그 리뷰를 Gemini로 분석한 감정 비율/워드클라우드/한줄 총평을 보여줍니다.
 
-- `js/kakao-local.js` — API 통신 전담. DOM을 건드리지 않습니다. 카카오를 직접 호출하지 않고 `/api/kakao-search`(서버 프록시)만 호출합니다.
-- `js/collect.js` — 이 페이지의 DOM 렌더링/이벤트/`localStorage` 저장 담당. `js/kakao-local.js` 다음에 로드되어야 합니다.
-- `api/kakao-search.js` — Vercel Serverless Function. 카카오 REST API 키(`process.env.KAKAO_REST_API_KEY`)는 여기서만 읽고 브라우저로 내려보내지 않습니다. 키는 배포 시 Vercel 프로젝트 환경변수로, 로컬(`vercel dev`)에서는 저장소 루트 `.env`로 설정합니다.
-- `css/collect.css` — 이 페이지 전용 스타일. 토큰은 `css/style.css`의 `:root`만 재사용합니다.
+- `js/kakao-local.js` — 카카오 검색 통신 전담. DOM을 건드리지 않습니다. 카카오를 직접 호출하지 않고 `/api/kakao-search`(서버 프록시)만 호출합니다. `normalizePlace()`가 좌표(`lat`/`lng`)도 함께 반환합니다.
+- `js/google-reviews.js` — 구글 리뷰 통신 전담. DOM을 건드리지 않습니다. 구글을 직접 호출하지 않고 `/api/google-reviews`(서버 프록시)만 호출합니다.
+- `js/gemini-analyze.js` — 리뷰 AI 분석 통신 전담. DOM을 건드리지 않습니다. Gemini를 직접 호출하지 않고 `/api/gemini-analyze`(서버 프록시)만 호출합니다.
+- `js/collect.js` — 이 페이지의 DOM 렌더링/이벤트/`localStorage` 저장 담당(담은 맛집 목록 + 구글 리뷰 캐시 + AI 분석 캐시). `js/kakao-local.js`, `js/google-reviews.js`, `js/gemini-analyze.js` 다음에 로드되어야 합니다. 카드를 클릭하면 `openDetailOverlay()`가 공유 오버레이(`#collect-detail-overlay`)를 열어 리뷰를 렌더링하고(`mideok.collect.reviews.v1` 캐시), 리뷰가 1개 이상이면 이어서 자동으로 AI 분석을 시작합니다(`mideok.collect.analysis.v1` 캐시). 워드클라우드는 CDN의 `wordcloud2.js`(`window.WordCloud`)로 canvas에 그립니다.
+- `api/kakao-search.js` — Vercel Serverless Function. 카카오 REST API 키(`process.env.KAKAO_REST_API_KEY`)는 여기서만 읽고 브라우저로 내려보내지 않습니다.
+- `api/google-reviews.js` — Vercel Serverless Function. 구글 Places API 키(`process.env.GOOGLE_PLACES_API_KEY`)는 여기서만 읽습니다. **Places API의 최신(New) 버전만 사용**합니다 — Text Search (New)로 후보를 찾은 뒤 좌표로 직접 150m 반경을 계산해 하드 필터링하고(Text Search의 `locationRestriction`은 원(circle)을 지원하지 않아 `locationBias` + 서버 측 거리 계산으로 구현했습니다), Place Details (New)로 이름/평점/리뷰개수/리뷰/지도링크 5개 필드만 요청합니다.
+- `api/gemini-analyze.js` — Vercel Serverless Function. Gemini API 키(`process.env.GEMINI_API_KEY`)는 여기서만 읽습니다. `generativelanguage.googleapis.com`의 `generateContent`를 JSON 구조화 출력(`responseSchema`)으로 한 번 호출해 감정 분류/키워드/한줄 요약을 동시에 받습니다. 다른 두 프록시와 달리 리뷰 배열을 보내야 해서 POST+JSON body를 씁니다.
+- 세 API 키 모두 배포 시 Vercel 프로젝트 환경변수로, 로컬(`vercel dev` 또는 `scripts/dev-server.js`)에서는 저장소 루트 `.env`로 설정합니다.
+- `scripts/dev-server.js` — Vercel CLI 없이 `api/*.js`를 포함해 로컬에서 확인할 수 있는 대체 개발 서버. `node scripts/dev-server.js`로 실행.
+- `css/collect.css` — 이 페이지 전용 스타일. 토큰은 `css/style.css`의 `:root`만 재사용합니다(`--color-positive`/`--color-neutral`은 리뷰 AI 분석 전용으로 추가된 토큰).
 
 자세한 클래스 계약과 키 취급 규칙은 `TEAM.md`를 참고하세요.
 

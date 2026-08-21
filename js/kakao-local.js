@@ -90,6 +90,9 @@
       // 좌표 없이 검색하면 거리는 빈 값으로 온다 — 이때는 null로 두고 화면에서 숨긴다.
       distance: Number.isFinite(distance) && doc.distance !== "" ? distance : null,
       placeUrl: doc.place_url || "",
+      // 카카오는 x=경도, y=위도를 문자열로 준다. 구글 리뷰 검색(반경 매칭)에 쓴다.
+      lat: Number(doc.y) || null,
+      lng: Number(doc.x) || null,
     };
   }
 

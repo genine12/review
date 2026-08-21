@@ -57,6 +57,13 @@
 
 </main>
 
+<div class="collect-detail-overlay" id="collect-detail-overlay" hidden>
+  <div class="collect-detail-card" role="dialog" aria-modal="true" aria-labelledby="collect-detail-name">
+    <button class="collect-detail-close" id="collect-detail-close" aria-label="닫기">×</button>
+    <div class="collect-detail-body" id="collect-detail-body"></div>
+  </div>
+</div>
+
 <footer class="site-footer">
   <div class="container footer-inner">
     <span class="logo logo-small">믿먹</span>
@@ -64,8 +71,11 @@
   </div>
 </footer>
 
-<!-- 로드 순서 중요: kakao-local(API 프록시 호출) → collect(화면). 번들러 없이 전역으로 주고받는다. -->
+<!-- 로드 순서 중요: wordcloud2.js(외부 라이브러리) → kakao-local/google-reviews/gemini-analyze(API 프록시 호출) → collect(화면). 번들러 없이 전역으로 주고받는다. -->
+<script src="https://cdn.jsdelivr.net/npm/wordcloud@1.2.3/src/wordcloud2.js"></script>
 <script src="js/kakao-local.js"></script>
+<script src="js/google-reviews.js"></script>
+<script src="js/gemini-analyze.js"></script>
 <script src="js/collect.js"></script>
 </body>
 </html>
