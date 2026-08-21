@@ -11,7 +11,7 @@
 | `collect.html` (신규, 맛집 담기 페이지) | **logic** |
 | `js/kakao-local.js` (신규) | **logic** |
 | `js/collect.js` (신규) | **logic** |
-| `js/config.js` (신규, API 키) | **logic** |
+| `api/kakao-search.js` (신규, 서버 프록시) | **logic** |
 | `js/main.js`, `js/demo-data.js` | **logic** |
 | `index.html` | **design** |
 | `css/style.css` | **design** |
@@ -78,10 +78,12 @@ design은 아래 이름에만 스타일을 건다. 추가 클래스가 필요하
 
 ## 6. API 키 취급 (리더 결정, 절대 규칙)
 
-- 카카오 REST API 키는 저장소 루트의 **`.env`** 파일에만 둔다. 형식: `KAKAO_REST_API_KEY=키값`
+- 카카오 REST API 키는 **브라우저에 절대 내려가지 않는다.** 서버(Vercel Serverless Function `api/kakao-search.js`)에서만 `process.env.KAKAO_REST_API_KEY`로 읽는다.
+- `js/kakao-local.js`는 카카오를 직접 호출하지 않고 `/api/kakao-search`만 호출한다.
+- 로컬 개발은 `vercel dev`로 실행한다(일반 정적 서버로는 `api/` 함수가 동작하지 않는다). `vercel dev`는 저장소 루트 **`.env`**를 자동으로 읽는다. 형식: `KAKAO_REST_API_KEY=키값`
+- 배포 환경의 키는 Vercel 프로젝트 → Settings → Environment Variables에 등록한다.
 - `.env`는 `.gitignore`에 등록되어 있다. **어떤 경우에도 커밋하지 않는다.**
-- 정적 사이트라 빌드 단계가 없으므로, `.env`는 런타임에 `fetch`로 읽어 파싱한다(`js/env.js`). `process.env`는 존재하지 않는다.
-- 키 값을 다른 파일(`collect.html`, `kakao-local.js`, `collect.js`, 커밋 메시지, 로그)에 하드코딩하거나 복사하지 않는다.
+- 키 값을 다른 파일(`collect.html`, `kakao-local.js`, `collect.js`, `api/kakao-search.js` 소스 외, 커밋 메시지, 로그)에 하드코딩하거나 복사하지 않는다.
 - 저장소에 올라가는 템플릿은 `.env.example`(빈 값)뿐이다.
-- 키가 비어 있거나 `.env`를 못 읽으면 `.collect-status.is-error`로 안내를 띄우고, 카카오 API 호출은 시도하지 않는다.
-- `js/config.js` / `js/config.example.js`는 `.env` 방식으로 대체되어 폐기한다.
+- 서버에 키가 없거나(`NO_KEY`) `/api/kakao-search`를 찾을 수 없으면(`NO_PROXY`, 정적 서버로 열었을 때) `.collect-status.is-error`로 안내를 띄우고, 카카오 API 호출은 시도하지 않는다.
+- `js/env.js`(구 `.env` 브라우저 fetch 방식)와 `js/config.js` / `js/config.example.js`는 이 방식으로 대체되어 폐기한다.

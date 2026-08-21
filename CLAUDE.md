@@ -12,9 +12,10 @@
 
 ## 명령어
 
-빌드 단계, 패키지 매니저, 테스트 스위트가 없습니다 — 의존성 없는 정적 HTML/CSS/JS 사이트입니다.
+빌드 단계, 패키지 매니저, 테스트 스위트가 없습니다 — 의존성 없는 정적 HTML/CSS/JS 사이트입니다. 예외는 `api/kakao-search.js`(Vercel Serverless Function) 하나뿐입니다.
 
-- **로컬 실행**: `index.html`을 브라우저에서 바로 열면 됩니다 (`file://`로 동작, 서버 불필요).
+- **로컬 실행 (`index.html`)**: 브라우저에서 바로 열면 됩니다 (`file://`로 동작, 서버 불필요).
+- **로컬 실행 (`collect.html`)**: `vercel dev`로 실행해야 합니다. `api/kakao-search.js`가 서버 함수라 일반 정적 서버(`file://`, `python -m http.server` 등)로는 카카오 검색이 동작하지 않습니다. 저장소 루트에 `.env`(`.env.example` 참고, `KAKAO_REST_API_KEY=...`)를 두면 `vercel dev`가 자동으로 읽습니다.
 - 실행할 lint/build/test 명령어는 없습니다.
 
 ## 아키텍처
@@ -30,6 +31,17 @@
 ### 데모 섹션 데이터 흐름
 
 `demo-data.js`(`RESTAURANTS`, `CATEGORIES`) → 로드 시 `main.js`가 칩/카드를 렌더링 → 사용자 인터랙션(칩 클릭 / 검색 입력) → `main.js`가 메모리상의 배열을 다시 필터링해 카드 리스트를 재렌더링 — 네트워크 호출이나 백엔드는 없습니다. 목업 맛집을 추가하려면 `demo-data.js`의 `RESTAURANTS`에 항목을 추가하고(그리고 `assets/images/restaurants/`에 이미지 파일을 넣고) 그 외 파일은 새 카테고리를 도입하는 경우가 아니라면 수정할 필요가 없습니다(새 카테고리라면 `CATEGORIES`에도 추가).
+
+### 맛집 담기 페이지 (`collect.html`)
+
+카카오 로컬 API로 실제 장소를 검색해 `localStorage`에 담아두는 별도 페이지입니다(데모 섹션의 목업 데이터와 무관).
+
+- `js/kakao-local.js` — API 통신 전담. DOM을 건드리지 않습니다. 카카오를 직접 호출하지 않고 `/api/kakao-search`(서버 프록시)만 호출합니다.
+- `js/collect.js` — 이 페이지의 DOM 렌더링/이벤트/`localStorage` 저장 담당. `js/kakao-local.js` 다음에 로드되어야 합니다.
+- `api/kakao-search.js` — Vercel Serverless Function. 카카오 REST API 키(`process.env.KAKAO_REST_API_KEY`)는 여기서만 읽고 브라우저로 내려보내지 않습니다. 키는 배포 시 Vercel 프로젝트 환경변수로, 로컬(`vercel dev`)에서는 저장소 루트 `.env`로 설정합니다.
+- `css/collect.css` — 이 페이지 전용 스타일. 토큰은 `css/style.css`의 `:root`만 재사용합니다.
+
+자세한 클래스 계약과 키 취급 규칙은 `TEAM.md`를 참고하세요.
 
 ## 반응형
 - 모바일 (375)

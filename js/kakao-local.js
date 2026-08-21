@@ -2,12 +2,12 @@
  * kakao-local.js — 카카오 로컬 API(키워드 검색) 통신 전담.
  *
  * 이 파일은 DOM을 건드리지 않는다. 렌더링/이벤트/저장은 `collect.js`가 담당한다.
- * 번들러 없이 전역 변수로 주고받으므로 `env.js` 다음, `collect.js` 앞에 로드되어야 한다.
- * API 키는 `.env`(= window.Env)에서만 읽고, 이 파일에 하드코딩하지 않는다.
- * `.env` 로딩이 비동기이므로 키가 필요한 함수는 모두 Promise를 반환한다.
+ * 카카오 REST API 키는 브라우저에 없다 — `api/kakao-search.js`(서버) 안에만 있다.
+ * 이 파일은 그 서버 엔드포인트만 호출한다(카카오를 직접 호출하지 않는다).
+ * 번들러 없이 전역 변수로 주고받으므로 `collect.js`보다 먼저 로드되어야 한다.
  */
 (function () {
-  const ENDPOINT = "https://dapi.kakao.com/v2/local/search/keyword.json";
+  const PROXY_ENDPOINT = "/api/kakao-search";
 
   // 카테고리 그룹 코드 (FD6: 음식점, CE7: 카페)
   const CATEGORY_GROUP_CODE = {
@@ -21,47 +21,57 @@
 
   // 사용자에게 보여줄 문구는 여기서 확정한다(설정 문제 / 키 문제 / 네트워크 문제를 구분).
   const ERROR_MESSAGE = {
-    ENV_UNREADABLE:
-      ".env 파일을 읽지 못했어요. .env.example을 .env로 복사해 키를 입력한 뒤, file:// 로 직접 열지 말고 로컬 서버(http://localhost:8000)로 접속해주세요.",
-    NO_KEY: ".env의 KAKAO_REST_API_KEY에 카카오 REST API 키를 입력해주세요.",
-    AUTH: "API 키가 유효하지 않거나 플랫폼 등록이 필요합니다. 카카오 developers에서 REST API 키와 웹 플랫폼 등록을 확인해주세요.",
+    NO_PROXY:
+      "/api/kakao-search 를 찾을 수 없어요. `vercel dev`로 로컬에서 켜거나, Vercel에 배포된 주소로 접속해주세요(정적 서버로는 이 API가 동작하지 않습니다).",
+    NO_KEY:
+      "서버에 카카오 API 키가 설정되지 않았어요. Vercel 프로젝트 Settings → Environment Variables에 KAKAO_REST_API_KEY를 추가해주세요. 로컬(`vercel dev`)에서는 저장소 루트 .env에 같은 키를 넣어두면 자동으로 읽힙니다.",
+    AUTH: "API 키가 유효하지 않거나 플랫폼 등록이 필요합니다. 카카오 developers에서 REST API 키를 확인해주세요.",
     RATE_LIMIT: "요청이 너무 많아요. 잠시 후 다시 시도해주세요.",
-    NETWORK:
-      "카카오 서버에 연결하지 못했어요. 인터넷 연결을 확인하고, 파일을 직접 여는 대신 http://localhost:8000 으로 접속했는지 확인해주세요.",
+    NETWORK: "서버에 연결하지 못했어요. 인터넷 연결을 확인하고 잠시 후 다시 시도해주세요.",
     SERVER: "카카오 서버에서 응답을 받지 못했어요. 잠시 후 다시 시도해주세요.",
   };
-
-  // `.env`에서 키를 얻는다. 못 읽었는지 / 읽었는데 비었는지를 구분해 에러로 던진다.
-  async function ensureApiKey() {
-    if (!window.Env) throw createError("ENV_UNREADABLE");
-
-    const env = await window.Env.load();
-    if (!env.ok) throw createError("ENV_UNREADABLE");
-
-    const key = (env.values.KAKAO_REST_API_KEY || "").trim();
-    if (key === "") throw createError("NO_KEY");
-
-    return key;
-  }
-
-  /**
-   * 키를 쓸 수 있는 상태인지 미리 확인한다(던지지 않고 결과로 돌려준다).
-   * collect.js가 페이지 로드 직후 안내 문구를 고르는 데 쓴다.
-   * @returns {Promise<{ok: boolean, code: string|null, message: string}>}
-   */
-  async function checkApiKey() {
-    try {
-      await ensureApiKey();
-      return { ok: true, code: null, message: "" };
-    } catch (error) {
-      return { ok: false, code: error.code || "SERVER", message: error.message };
-    }
-  }
 
   function createError(code) {
     const error = new Error(ERROR_MESSAGE[code] || ERROR_MESSAGE.SERVER);
     error.code = code;
     return error;
+  }
+
+  // 프록시 응답이 실패(!ok)일 때 상태 코드 + 바디로 에러를 구분한다.
+  function errorFromResponse(status, body) {
+    if (status === 404) return createError("NO_PROXY");
+    if (status === 500 && body && body.error === "NO_KEY") return createError("NO_KEY");
+    if (status === 401 || status === 403) return createError("AUTH");
+    if (status === 429) return createError("RATE_LIMIT");
+    if (status === 502) return createError("NETWORK");
+    return createError("SERVER");
+  }
+
+  /**
+   * 검색 가능한 상태인지 미리 확인한다(카카오 쿼터를 쓰지 않는 가벼운 ping).
+   * collect.js가 페이지 로드 직후 안내 문구를 고르는 데 쓴다.
+   * @returns {Promise<{ok: boolean, code: string|null, message: string}>}
+   */
+  async function checkApiKey() {
+    let response;
+    try {
+      response = await fetch(PROXY_ENDPOINT + "?ping=1");
+    } catch (e) {
+      return { ok: false, code: "NETWORK", message: ERROR_MESSAGE.NETWORK };
+    }
+
+    if (!response.ok) {
+      let body = null;
+      try {
+        body = await response.json();
+      } catch (e) {
+        // 본문이 JSON이 아니면(예: 정적 서버가 404 HTML을 돌려줄 때) 무시한다.
+      }
+      const error = errorFromResponse(response.status, body);
+      return { ok: false, code: error.code, message: error.message };
+    }
+
+    return { ok: true, code: null, message: "" };
   }
 
   // 응답 문서 하나를 화면에서 쓰기 좋은 형태로 정규화한다.
@@ -99,9 +109,6 @@
       return { places: [], isEnd: true, totalCount: 0 };
     }
 
-    // 키를 못 얻으면 여기서 던지므로 카카오로 요청이 나가지 않는다.
-    const key = await ensureApiKey();
-
     // 45개 상한을 넘어서면 카카오가 에러를 주므로 그 전에 마지막 페이지로 처리한다.
     if ((page - 1) * size >= MAX_RESULT_COUNT) {
       return { places: [], isEnd: true, totalCount: 0 };
@@ -118,18 +125,19 @@
 
     let response;
     try {
-      response = await fetch(ENDPOINT + "?" + params.toString(), {
-        headers: { Authorization: "KakaoAK " + key },
-      });
+      response = await fetch(PROXY_ENDPOINT + "?" + params.toString());
     } catch (e) {
-      // fetch 자체가 실패한 경우 = 네트워크 단절이거나, file://로 열어 CORS에 막힌 경우
       throw createError("NETWORK");
     }
 
     if (!response.ok) {
-      if (response.status === 401 || response.status === 403) throw createError("AUTH");
-      if (response.status === 429) throw createError("RATE_LIMIT");
-      throw createError("SERVER");
+      let body = null;
+      try {
+        body = await response.json();
+      } catch (e) {
+        // 본문이 JSON이 아니어도(예: 정적 서버의 404 HTML) 상태 코드만으로 처리한다.
+      }
+      throw errorFromResponse(response.status, body);
     }
 
     let data;

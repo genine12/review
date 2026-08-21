@@ -38,7 +38,7 @@
   let currentQuery = "";
   let currentPage = 1;
   let savedPlaces = loadSaved();
-  // 사용자가 검색을 시작했는지. `.env` 로딩이 늦게 끝나도 검색 결과를 덮어쓰지 않기 위해 본다.
+  // 사용자가 검색을 시작했는지. 설정 확인(ping)이 늦게 끝나도 검색 결과를 덮어쓰지 않기 위해 본다.
   let hasSearched = false;
   // 가장 최신 요청만 화면에 반영한다(늦게 도착한 이전 응답이 결과를 덮는 것을 막는다).
   let requestToken = 0;
@@ -79,9 +79,9 @@
   }
 
   /**
-   * `.env` 로딩은 비동기라서 페이지가 뜬 직후엔 키를 알 수 없다.
-   * 결과 Promise를 한 번만 만들어 재사용하므로, 로딩이 끝나기 전에 검색을 눌러도
-   * 실패하지 않고 로딩 완료를 기다린 뒤 이어서 진행된다.
+   * 서버(api/kakao-search) 설정 확인은 네트워크 요청이라 페이지가 뜬 직후엔 결과를 알 수 없다.
+   * 결과 Promise를 한 번만 만들어 재사용하므로, 확인이 끝나기 전에 검색을 눌러도
+   * 실패하지 않고 확인 완료를 기다린 뒤 이어서 진행된다.
    * @returns {Promise<{ok: boolean, code: string|null, message: string}>}
    */
   let envState = null;
@@ -248,7 +248,7 @@
     showStatus("is-loading", STATUS_TEXT.LOADING);
 
     try {
-      // `.env` 로딩이 아직이면 여기서 기다린다. 설정에 문제가 있으면
+      // 서버 설정 확인이 아직이면 여기서 기다린다. 설정에 문제가 있으면
       // 카카오로 요청을 보내지 않고 사유별 안내만 띄운다.
       const state = await ensureEnvReady();
       if (token !== requestToken) return;
@@ -310,8 +310,8 @@
 
   /* ---------- 초기 렌더 ---------- */
 
-  // 칩·담은 목록·localStorage는 `.env`와 무관하게 먼저 그린다.
-  // `.env` 로딩이 실패해도 이 기능들은 그대로 동작해야 한다.
+  // 칩·담은 목록·localStorage는 서버 설정 확인과 무관하게 먼저 그린다.
+  // 그 확인이 실패해도 이 기능들은 그대로 동작해야 한다.
   renderChips();
   renderSaved();
 

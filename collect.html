@@ -64,8 +64,7 @@
   </div>
 </footer>
 
-<!-- 로드 순서 중요: env(.env 로더) → kakao-local(API) → collect(화면). 번들러 없이 전역으로 주고받는다. -->
-<script src="js/env.js"></script>
+<!-- 로드 순서 중요: kakao-local(API 프록시 호출) → collect(화면). 번들러 없이 전역으로 주고받는다. -->
 <script src="js/kakao-local.js"></script>
 <script src="js/collect.js"></script>
 </body>
