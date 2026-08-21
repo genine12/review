@@ -157,26 +157,6 @@
   box-shadow: var(--shadow-lift);
 }
 
-/* 카카오 로컬 API는 이미지를 주지 않으므로 썸네일은 플레이스홀더 상태로도 성립해야 한다 */
-.collect-card__thumb {
-  flex: 0 0 auto;
-  aspect-ratio: 4 / 3;
-  background: var(--color-bg-alt);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-heading);
-  font-size: 1.5rem;
-  color: var(--color-text-muted);
-  overflow: hidden;
-}
-
-.collect-card__thumb img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
 .collect-card__body {
   flex: 1 1 auto;
   min-width: 0;
@@ -322,12 +302,6 @@
   box-shadow: var(--shadow-soft);
 }
 
-.collect-saved__list .collect-card__thumb {
-  flex: 0 0 84px;
-  aspect-ratio: 1 / 1;
-  font-size: 1.1rem;
-}
-
 .collect-saved__list .collect-card__body {
   flex-direction: row;
   flex-wrap: wrap;
@@ -381,7 +355,6 @@
 .collect-status[hidden],
 .collect-results[hidden],
 .collect-card[hidden],
-.collect-card__thumb[hidden],
 .collect-card__name[hidden],
 .collect-card__category[hidden],
 .collect-card__address[hidden],
