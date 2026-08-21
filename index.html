@@ -14,12 +14,21 @@
 <header class="site-header">
   <div class="container header-inner">
     <a href="#top" class="logo">믿먹</a>
-    <nav class="site-nav">
-      <a href="#demo">데모</a>
-      <a href="#roadmap">로드맵</a>
-      <a href="#cta">소식받기</a>
-      <a href="collect.html" class="nav-cta">맛집 담기</a>
-    </nav>
+    <div class="header-right">
+      <nav class="site-nav">
+        <a href="#demo">데모</a>
+        <a href="#roadmap">로드맵</a>
+        <a href="#cta">소식받기</a>
+        <a href="collect.html" class="nav-cta">맛집 담기</a>
+      </nav>
+      <div class="auth-widget" id="auth-widget">
+        <button class="auth-login-button" id="auth-login-button" type="button">로그인</button>
+        <div class="auth-status" id="auth-status-group" hidden>
+          <span id="auth-status"></span>
+          <button class="auth-logout-button" id="auth-logout-button" type="button">로그아웃</button>
+        </div>
+      </div>
+    </div>
   </div>
 </header>
 
@@ -137,6 +146,26 @@
   </div>
 </div>
 
+<div class="auth-overlay" id="auth-overlay" hidden>
+  <div class="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
+    <button class="auth-close" id="auth-close" aria-label="닫기">×</button>
+    <h3 id="auth-modal-title">로그인</h3>
+    <form class="auth-form" id="auth-form">
+      <input type="email" id="auth-email" placeholder="이메일" autocomplete="email" required>
+      <input type="password" id="auth-password" placeholder="비밀번호" autocomplete="current-password" required>
+      <p class="auth-error" id="auth-error" hidden></p>
+      <div class="auth-form__actions">
+        <button type="submit" class="auth-submit" id="auth-signin-button">로그인</button>
+        <button type="button" class="auth-submit auth-submit--secondary" id="auth-signup-button">회원가입</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 로드 순서 중요: supabase-js(CDN) → supabase-client(클라이언트 초기화) → auth(로그인 UI) → demo-data/main(이 페이지 로직). -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/auth.js"></script>
 <script src="js/demo-data.js"></script>
 <script src="js/main.js"></script>
 </body>

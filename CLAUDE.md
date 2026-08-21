@@ -35,6 +35,16 @@
 
 `demo-data.js`(`RESTAURANTS`, `CATEGORIES`) → 로드 시 `main.js`가 칩/카드를 렌더링 → 사용자 인터랙션(칩 클릭 / 검색 입력) → `main.js`가 메모리상의 배열을 다시 필터링해 카드 리스트를 재렌더링 — 네트워크 호출이나 백엔드는 없습니다. 목업 맛집을 추가하려면 `demo-data.js`의 `RESTAURANTS`에 항목을 추가하고(그리고 `assets/images/restaurants/`에 이미지 파일을 넣고) 그 외 파일은 새 카테고리를 도입하는 경우가 아니라면 수정할 필요가 없습니다(새 카테고리라면 `CATEGORIES`에도 추가).
 
+### 로그인 (Supabase, 사이트 전역)
+
+`index.html`과 `collect.html` 헤더 오른쪽 위에 동일한 로그인 위젯(`.auth-widget`)과 모달(`.auth-overlay`)이 있습니다(공유 컴포넌트가 아니라 두 파일에 마크업이 각각 복사돼 있음 — 템플릿 엔진이 없어서). 이메일/비밀번호 로그인이며 비밀번호 처리는 전부 Supabase Auth에 맡깁니다.
+
+- `js/supabase-client.js` — `window.supabase.createClient(...)`(CDN)를 호출해 `window.supabaseClient`를 만듭니다. Supabase URL과 publishable(anon) 키가 여기 하드코딩돼 있는데, **이건 의도된 것**입니다 — 다른 세 개(카카오/구글/제미나이)와 달리 publishable 키는 브라우저 노출을 전제로 설계됐고 실제 접근 제어는 Supabase 프로젝트의 RLS 정책이 담당하므로 서버 프록시가 필요 없습니다.
+- `js/auth.js` — 인증 로직(`window.Auth`)과 헤더 위젯/로그인 모달 UI를 함께 구현합니다. `window.Auth.getUser()`(현재 로그인한 사용자, 동기값)와 `window.Auth.onChange(cb)`(로그인 상태 변화 구독)가 다른 기능이 재사용하는 진입점입니다 — 예: `js/collect.js`의 담기 버튼이 `Auth.getUser()`로 로그인 여부를 확인합니다. 세션 지속(새로고침 유지)은 supabase-js가 기본으로 처리합니다.
+- 두 페이지 모두 `<head>`에서 `@supabase/supabase-js`(CDN)를 로드하고, body 스크립트 맨 앞에서 `js/supabase-client.js` → `js/auth.js` 순으로 로드합니다(그 페이지의 다른 스크립트보다 먼저).
+- **회원가입 후 바로 로그인되려면 Supabase 프로젝트의 Authentication → Sign In / Providers → Email → "Confirm email"이 꺼져 있어야 합니다.** 켜져 있으면 `signUp()`이 세션 없이 끝나고, 코드는 이 경우 "가입 확인 이메일을 보냈어요" 안내로 대체합니다(방어적 처리일 뿐 요구사항인 "인증 대기 없음"을 만족하려면 대시보드에서 꺼야 합니다).
+- 담기(맛집 저장)는 로그인한 회원만 가능합니다. 비로그인 상태에서 담기를 누르면 저장 대신 로그인 모달이 뜹니다. 검색/리뷰 조회/AI 분석은 로그인 없이 그대로 열려 있습니다.
+
 ### 맛집 담기 페이지 (`collect.html`)
 
 카카오 로컬 API로 실제 장소를 검색해 `localStorage`에 담아두는 별도 페이지입니다(데모 섹션의 목업 데이터와 무관). 카드를 클릭하면 화면 중앙 오버레이(`.collect-detail-overlay`)가 뜨며 구글 Places API(New)로 조회한 별점/리뷰와, 그 리뷰를 Gemini로 분석한 감정 비율/워드클라우드/한줄 총평을 보여줍니다.

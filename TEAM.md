@@ -17,6 +17,8 @@
 | `js/gemini-analyze.js` (신규) | **logic** |
 | `api/gemini-analyze.js` (신규, 서버 프록시) | **logic** |
 | `scripts/dev-server.js` (신규, 로컬 개발 서버) | **logic** |
+| `js/supabase-client.js` (신규) | **logic** |
+| `js/auth.js` (신규, 로그인 로직+UI, index.html·collect.html 공용) | **logic** |
 | `js/main.js`, `js/demo-data.js` | **logic** |
 | `index.html` | **design** |
 | `css/style.css` | **design** |

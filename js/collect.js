@@ -543,10 +543,15 @@
   moreButton.addEventListener("click", loadMore);
 
   // 카드는 계속 다시 그려지므로 클릭은 이벤트 위임으로 받는다.
-  // 담기 버튼 → 담기/빼기, 카카오맵 링크 → 기본 동작(새 탭), 그 외 카드 클릭 → 리뷰/분석 오버레이 열기.
+  // 담기 버튼 → 로그인 필요(비로그인 시 로그인 창), 카카오맵 링크 → 기본 동작(새 탭), 그 외 카드 클릭 → 리뷰/분석 오버레이 열기.
   function handleCardClick(e) {
     const saveButton = e.target.closest(".collect-card__save");
     if (saveButton) {
+      // 담기는 로그인한 회원만 가능하다 — 비로그인이면 저장 대신 로그인 창을 띄운다.
+      if (!window.Auth || !window.Auth.getUser()) {
+        if (window.Auth) window.Auth.openLoginModal();
+        return;
+      }
       const card = saveButton.closest(".collect-card");
       if (card) toggleSave(card.dataset.id);
       return;
