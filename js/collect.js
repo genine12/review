@@ -19,9 +19,14 @@
 
   const STORAGE_KEY = "mideok.collect.saved.v1";
   // 한 번 조회한 가게의 구글 리뷰를 캐시한다: { [placeId]: normalizedGoogleData }
-  const REVIEW_STORAGE_KEY = "mideok.collect.reviews.v1";
+  // v2 — 리뷰를 한국어(languageCode=ko)로 받도록 바꾸면서, 영어로 캐시돼 있던 v1은 버린다.
+  const REVIEW_STORAGE_KEY = "mideok.collect.reviews.v2";
   // 한 번 분석한 가게의 AI 분석 결과를 캐시한다: { [placeId]: {sentimentCounts, keywords, summary} }
-  const ANALYSIS_STORAGE_KEY = "mideok.collect.analysis.v1";
+  // v2 — 키워드를 한국어로 뽑도록 바꾸면서, 영어 키워드가 남은 v1은 버린다.
+  const ANALYSIS_STORAGE_KEY = "mideok.collect.analysis.v2";
+
+  // 리뷰 오버레이 스크롤이 멈춘 뒤 스크롤바를 다시 감추기까지의 시간(ms).
+  const SCROLLBAR_HIDE_DELAY_MS = 700;
 
   // 검색어에 덧붙는 보조 키워드 + 카테고리 그룹 코드
   const CATEGORY_FILTERS = [
@@ -297,6 +302,9 @@
 
     renderDetailLoading(place.name);
     detailOverlay.hidden = false;
+    // 이전에 열었던 가게에서 내려둔 스크롤 위치가 남지 않도록 맨 위에서 시작한다.
+    detailBody.scrollTop = 0;
+    detailBody.classList.remove("is-scrolling");
     document.body.style.overflow = "hidden";
 
     const cached = reviewCache[place.id];
@@ -576,6 +584,17 @@
   });
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && !detailOverlay.hidden) closeDetailOverlay();
+  });
+
+  // 스크롤바는 스크롤하는 동안에만 보인다 — 멈추고 잠시 뒤 다시 투명해진다.
+  // (실제 색은 css/collect.css의 .collect-detail-body.is-scrolling 규칙에 있다.)
+  let scrollbarHideTimer = null;
+  detailBody.addEventListener("scroll", () => {
+    detailBody.classList.add("is-scrolling");
+    window.clearTimeout(scrollbarHideTimer);
+    scrollbarHideTimer = window.setTimeout(() => {
+      detailBody.classList.remove("is-scrolling");
+    }, SCROLLBAR_HIDE_DELAY_MS);
   });
 
   /* ---------- 초기 렌더 ---------- */

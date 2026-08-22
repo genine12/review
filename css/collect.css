@@ -266,16 +266,22 @@
   padding: 20px;
 }
 
+/* 카드 자체는 스크롤하지 않는다 — 스크롤은 본문(.collect-detail-body)만 한다.
+   그래야 닫기 버튼이 카드에 붙어 항상 오른쪽 위에 남고, 스크롤바도 둥근 모서리
+   안쪽에서만 그려진다(overflow: hidden으로 모서리 밖을 잘라낸다). */
 .collect-detail-card {
   background: var(--color-bg);
   max-width: 640px;
   width: 100%;
   max-height: 85vh;
-  overflow-y: auto;
   border-radius: var(--radius);
   position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
+/* 카드 기준 absolute — 본문이 스크롤돼도 따라 올라가지 않는다. */
 .collect-detail-close {
   position: absolute;
   top: 14px;
@@ -292,12 +298,43 @@
 
 .collect-detail-body {
   padding: 28px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* 스크롤바는 항상 자리를 차지하되(스크롤 시작할 때 레이아웃이 밀리지 않게)
+     평소에는 투명해서 보이지 않는다. collect.js가 스크롤 중에만
+     .is-scrolling을 붙여 색을 넣는다. */
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.3s ease;
+}
+
+.collect-detail-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.collect-detail-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.collect-detail-body::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: var(--radius-pill);
+  transition: background 0.3s ease;
+}
+
+.collect-detail-body.is-scrolling {
+  scrollbar-color: rgba(17, 17, 17, 0.28) transparent;
+}
+
+.collect-detail-body.is-scrolling::-webkit-scrollbar-thumb {
+  background: rgba(17, 17, 17, 0.28);
 }
 
 .collect-detail-body #collect-detail-name {
   font-size: 1.4rem;
   letter-spacing: -0.02em;
-  padding-right: 32px;
+  /* 닫기 버튼(38px + 여백)과 겹치지 않게 */
+  padding-right: 48px;
 }
 
 .collect-review-summary {

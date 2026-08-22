@@ -21,6 +21,11 @@ const PLACE_DETAILS_ENDPOINT = "https://places.googleapis.com/v1/places/";
 const SEARCH_FIELD_MASK = "places.id,places.location";
 // 화면에 실제로 쓰는 5개 정보로 필드를 제한한다(과금·노출 최소화).
 const DETAILS_FIELD_MASK = "displayName,rating,userRatingCount,reviews,googleMapsUri";
+// 리뷰 본문/작성 시점 표기를 한국어로 받는다. 원문이 외국어인 리뷰는 구글이 번역해서
+// `reviews[].text`에 한국어로 내려주고, 원문은 `reviews[].originalText`에 따로 담긴다.
+const LANGUAGE_CODE = "ko";
+const REGION_CODE = "KR";
+const DETAILS_QUERY = `?languageCode=${LANGUAGE_CODE}&regionCode=${REGION_CODE}`;
 // "도보 2분" = 150m
 const RADIUS_METERS = 150;
 // bias만으로는 진짜 가까운 후보가 뒤로 밀릴 수 있어 여러 개를 받아 직접 거리순으로 고른다.
@@ -72,6 +77,8 @@ module.exports = async (req, res) => {
       body: JSON.stringify({
         textQuery: name,
         maxResultCount: SEARCH_CANDIDATE_COUNT,
+        languageCode: LANGUAGE_CODE,
+        regionCode: REGION_CODE,
         locationBias: {
           circle: {
             center: { latitude: lat, longitude: lng },
@@ -118,7 +125,7 @@ module.exports = async (req, res) => {
 
   let detailsRes;
   try {
-    detailsRes = await fetch(PLACE_DETAILS_ENDPOINT + placeId, {
+    detailsRes = await fetch(PLACE_DETAILS_ENDPOINT + placeId + DETAILS_QUERY, {
       headers: {
         "X-Goog-Api-Key": GOOGLE_KEY,
         "X-Goog-FieldMask": DETAILS_FIELD_MASK,

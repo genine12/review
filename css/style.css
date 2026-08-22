@@ -20,6 +20,9 @@
   --color-text-muted: #666666;
   --color-point: #FFF67E;
   --color-point-text: #111111;
+  /* 면과 라운드로 구분하는 게 기본이라 테두리는 드물게 쓴다 —
+     배경(#FFF)에서 살짝 떠 보일 정도로만 연한 회색 */
+  --color-border: #E0E0DC;
   /* 에러 상태 전용. 흑백 기조를 깨지 않도록 저채도 벽돌빛으로 제한 */
   --color-danger: #B4413A;
   /* 리뷰 AI 분석(감정 막대·워드클라우드) 전용. 데이터 시각화라는 기능적 목적으로만 쓴다 —
@@ -149,16 +152,20 @@ input { font-family: inherit; }
   white-space: nowrap;
 }
 
-/* 앵커가 아닌 페이지 이동 링크는 포인트 컬러 pill로 */
+/* 앵커가 아닌 페이지 이동 링크. 바로 옆 로그인 버튼이 포인트 컬러라
+   둘 다 노란 pill이면 시선이 갈리므로, 이쪽은 흰 바탕 + 연한 테두리로 낮춘다.
+   테두리를 border 대신 inset box-shadow로 넣어 다른 네비 항목과 높이를 맞춘다
+   (border는 1px씩 높이를 더해 로그인 버튼과 어긋난다). */
 .site-nav .nav-cta {
-  background: var(--color-point);
-  color: var(--color-point-text);
+  background: var(--color-bg);
+  color: var(--color-text);
+  box-shadow: inset 0 0 0 1px var(--color-border);
   font-weight: 600;
 }
 
 .site-nav .nav-cta:hover {
-  background: var(--color-point);
-  box-shadow: var(--shadow-soft);
+  background: var(--color-bg-alt);
+  box-shadow: inset 0 0 0 1px var(--color-border);
 }
 
 .site-nav a:focus-visible {
@@ -180,10 +187,13 @@ input { font-family: inherit; }
   flex: 0 0 auto;
 }
 
+/* 헤더 네비 링크(.site-nav a)와 같은 크기·글자로 맞춘다 —
+   모바일은 좁은 padding, 768px 이상에서 함께 커진다(아래 반응형 블록). */
 .auth-login-button {
-  padding: 6px 16px;
+  padding: 6px 8px;
   font-size: 0.85rem;
   font-weight: 600;
+  line-height: 1.5;
   white-space: nowrap;
   border-radius: var(--radius-pill);
   background: var(--color-point);
@@ -208,9 +218,10 @@ input { font-family: inherit; }
 }
 
 .auth-logout-button {
-  padding: 6px 14px;
-  font-size: 0.82rem;
+  padding: 6px 8px;
+  font-size: 0.85rem;
   font-weight: 600;
+  line-height: 1.5;
   border-radius: var(--radius-pill);
   background: var(--color-bg-alt);
   color: var(--color-text);
@@ -1026,8 +1037,14 @@ input { font-family: inherit; }
     overflow-x: visible;
   }
 
-  .site-nav a {
+  .site-nav a,
+  .auth-login-button,
+  .auth-logout-button {
     padding: 6px 14px;
+    font-size: 0.9rem;
+  }
+
+  .auth-status {
     font-size: 0.9rem;
   }
 

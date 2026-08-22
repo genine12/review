@@ -2,10 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "static",
-      "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "4188"],
-      "port": 4188
+      "name": "mideok",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["scripts/dev-server.js", "3000"],
+      "port": 3000
     }
   ]
 }
